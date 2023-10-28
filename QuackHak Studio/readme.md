@@ -10,8 +10,6 @@ QuackHak Studio is an Integrated Development Environment (IDE) for Rubber Ducky 
 
 - **Undo/Redo**: QuackHak Studio supports undo and redo actions, making it easy to revert changes or redo previous actions.
 
-- **Code Coloring**: The IDE colorizes different parts of the code for better readability, helping you identify commands, comments, and more.
-
 - **Code Templates**: QuackHak Studio offers pre-defined code templates for common Rubber Ducky payloads, making it convenient to get started with scripting.
 
 ## Getting Started
