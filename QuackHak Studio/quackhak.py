@@ -7,6 +7,8 @@ import base64
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QMenu, QFileDialog, QAction, QMessageBox, QStatusBar
 from PyQt5.QtGui import QFont, QTextCharFormat, QColor, QTextCursor, QIcon, QPixmap, QKeySequence
 from PyQt5.QtCore import Qt
+import os
+from functools import partial
 
 # QuackHak by CaliNux
 
@@ -165,11 +167,52 @@ class CodeEditor(QMainWindow):
         for name, callback in file_actions:
             file_menu.addAction(QAction(name, self, triggered=callback))
 
+        file_menu.addAction(QAction('Add Template', self, triggered=self.addTemplate))
+
         run_menu.addAction(QAction('Run Script', self, triggered=self.executeScript))
         run_menu.addAction(QAction('Run AutoRun', self, triggered=self.runScript))
+        self.new_menu = new_menu
+        self.refreshTemplates()
 
     def updateStatusBar(self, message):
         self.status_bar.showMessage(message)
+
+    def addTemplate(self):
+        choice = QMessageBox.question(self, 'Add Template', 'Would you like to save the current script as a template?',
+                                      QMessageBox.Yes | QMessageBox.No)
+
+        if choice == QMessageBox.Yes:
+            template_name, _ = QFileDialog.getSaveFileName(self, "Save Template", "", "Template Files (*.quack)")
+            if template_name:
+                with open(template_name, 'w') as file:
+                    file.write(self.text_edit.toPlainText())
+                self.refreshTemplates()
+
+    def refreshTemplates(self):
+        template_files = [f for f in os.listdir('.') if f.endswith('.quack')]#lol
+
+        self.new_menu.clear()
+
+        new_actions = [
+            ("New", self.loadFreshCode),
+            ("Basic", self.loadBasicCode),
+            ("Base64", self.loadBase64Code),
+            ("Memory Execution", self.loadMemoryExecutionCode)
+        ]
+        for name, callback in new_actions:
+            self.new_menu.addAction(QAction(name, self, triggered=callback))
+        for template in template_files:
+            base_name = os.path.splitext(template)[0]
+            action = QAction(base_name, self)
+            action.triggered.connect(partial(self.loadUserTemplate, template_name=template))
+            self.new_menu.addAction(action)
+
+    def loadUserTemplate(self, template_name):
+        try:
+            with open(template_name, 'r') as file:
+                self.text_edit.setPlainText(file.read())
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', f'Failed to load template: {str(e)}')
 
     def undoAction(self):
         if not self.history:
@@ -298,7 +341,7 @@ class CodeEditor(QMainWindow):
         keywords = ['string', 'delay', 'enter', 'tab', 'rem', 'esc', 'alt', 'ctrl', 'shift', 'uparrow', 'downarrow',
                     'rightarrow', 'leftarrow', 'home', 'end', 'insert', 'delete', 'pageup', 'pagedown', 'capslock',
                     'numlock', 'scrolllock', 'space', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10',
-                    'f11', 'f12', 'printscreen', 'gui']
+                    'f11', 'f12', 'printscreen', 'gui', 'Gui', 'GUi','Rem','Esc','Ctrl','Alt','Delay','String','Enter','Tab','Shift','Space','Delete','End','Home']
 
         for keyword in keywords:
             text = re.sub(r'^\b' + keyword + r'\b', keyword.upper(), text, flags=re.MULTILINE)
@@ -322,6 +365,9 @@ class CodeEditor(QMainWindow):
 
         document, format = self.text_edit.document(), QTextCharFormat()
         current_text, updated_text = self.text_edit.toPlainText(), self.uppercaseKeywords(self.text_edit.toPlainText())
+
+        # Remove https:// prefix --- may want to remove in future if this bugs shit out
+        updated_text = self.remove_https_prefix(updated_text)
 
         if current_text != updated_text:
             self.text_edit.setPlainText(updated_text)
@@ -400,9 +446,13 @@ class CodeEditor(QMainWindow):
 
             cursor.movePosition(QTextCursor.NextBlock)
 
+
         cursor.setPosition(current_position)
         self.text_edit.setTextCursor(cursor)
         self.text_edit.textChanged.connect(self.colorizeText)
+
+    def remove_https_prefix(self, text):
+        return text.replace("https://", "")
 
     def openFile(self):
         options = QFileDialog.ReadOnly
@@ -418,10 +468,10 @@ class CodeEditor(QMainWindow):
         cursor, format = self.text_edit.textCursor(), QTextCharFormat()
         color_mapping = {
             ("DELAY", "GUI", "STRING", "ENTER", "TAB", ";", "|", "ESC", "ALT", "CTRL", "UPARROW", "SHIFT", "DOWNARROW", "LEFTARROW", "RIGHTARROW", "HOME", "END", "INSERT", "DELETE", "PAGEUP", "PAGEDOWN", "CAPSLOCK", "NUMLOCK", "SCROLLLOCK", "SPACE", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "PRINTSCREEN"): "orange",
-            ("irm", "iex", "iwr"): "cyan",
-            ("LINK", "FUNCTION", "WEBHOOK"): "red",
+            ("irm", "iex", "iwr"): "#00ccff",
+            ("LINK", "FUNCTION", "WEBHOOK", "DISCORD"): "#F44444",
             ("NoP", "W", "H", "Ep", "Bypass", "NoProfile", "WindowStyle", "Hidden", "w", "h",
-             "ExecutionPolicy"): "yellow",
+             "ExecutionPolicy"): "#ff80ff",
             "default": "white"
         }
         for line in text.split('\n'):
