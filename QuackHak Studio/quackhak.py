@@ -1,14 +1,14 @@
-import sys
+import os
 import re
+import sys
 import time
+import base64
 import pyautogui
 import webbrowser
-import base64
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QMenu, QFileDialog, QAction, QMessageBox, QStatusBar
-from PyQt5.QtGui import QFont, QTextCharFormat, QColor, QTextCursor, QIcon, QPixmap, QKeySequence
 from PyQt5.QtCore import Qt
-import os
 from functools import partial
+from PyQt5.QtGui import QFont, QTextCharFormat, QColor, QTextCursor, QIcon, QPixmap, QKeySequence
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QMenu, QFileDialog, QAction, QMessageBox, QStatusBar
 
 # QuackHak by CaliNux
 
@@ -269,6 +269,7 @@ class CodeEditor(QMainWindow):
             return
         key_map = { #doesnt include all ducky commands yet
             "GUI r": ("hotkey", ('win', 'r')),
+            "WINDOWS r": ("hotkey", ('win', 'r')),
             "GUI x": ("hotkey", ('win', 'x')),
             "ENTER": "enter",
             "TAB": "tab",
@@ -302,6 +303,10 @@ class CodeEditor(QMainWindow):
             elif line.startswith("DELAY"):
                 delay_time = float(line.split()[1]) / 1000
                 time.sleep(delay_time)
+            elif line.startswith("STRINGLN"):
+                content_to_type = line.split("STRINGLN", 1)[1].strip()
+                pyautogui.write(content_to_type)
+                pyautogui.press('enter')  # Simulating pressing the ENTER key after typing
             elif line.startswith("STRING"):
                 content_to_type = line.split("STRING", 1)[1].strip()
                 pyautogui.write(content_to_type)
@@ -341,7 +346,8 @@ class CodeEditor(QMainWindow):
         keywords = ['string', 'delay', 'enter', 'tab', 'rem', 'esc', 'alt', 'ctrl', 'shift', 'uparrow', 'downarrow',
                     'rightarrow', 'leftarrow', 'home', 'end', 'insert', 'delete', 'pageup', 'pagedown', 'capslock',
                     'numlock', 'scrolllock', 'space', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10',
-                    'f11', 'f12', 'printscreen', 'gui', 'Gui', 'GUi','Rem','Esc','Ctrl','Alt','Delay','String','Enter','Tab','Shift','Space','Delete','End','Home']
+                    'f11', 'f12', 'printscreen', 'gui', 'Gui', 'GUi', 'Rem', 'REm', 'Esc', 'Ctrl', 'Alt', 'Delay', 'String',
+                    'Enter', 'Tab', 'Shift', 'Space', 'Delete', 'End', 'Home', 'windows', 'Windows', "stringln", "Stringln", "STRINGln", "STRINGLn"]
 
         for keyword in keywords:
             text = re.sub(r'^\b' + keyword + r'\b', keyword.upper(), text, flags=re.MULTILINE)
@@ -381,32 +387,36 @@ class CodeEditor(QMainWindow):
             "SHIFT", "DOWNARROW", "LEFTARROW", "RIGHTARROW", "HOME", "END", "INSERT",
             "DELETE", "PAGEUP", "PAGEDOWN", "CAPSLOCK", "NUMLOCK", "SCROLLLOCK", "SPACE",
             "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
-            "PRINTSCREEN"
+            "PRINTSCREEN", "WINDOWS", "STRINGLN"
         )
 
+        orange_keys = [
+            *keywords,
+            ";",
+            "|"
+        ]
+        cyan_keys = [
+            "irm", "iex", "iwr", "certutil"
+        ]
+        red_keys = [
+            "LINK", "DISCORD", "FUNCTION", "WEBHOOK", "webhook", "Webhook",
+            "discord", "Discord", "link", "Link"
+        ]
+        purple_keys = [
+            "powershell", "Powershell"
+        ]
+        outofnameslol = [
+            "-NoP", "-W", "H", "-Ep", "Bypass", "-NoProfile", "-WindowStyle",
+            "Hidden", "-w", "h", "-ExecutionPolicy", "bypass", "-noprofile",
+            "-nop", "-ep", "-executionpolicy", "-windowstyle", "hidden"
+        ]
+
         color_mapping = {
-            **{key: "orange" for key in keywords},
-            ";": "orange",
-            "|": "orange",
-            "irm": "#00ccff",
-            "iex": "#00ccff",
-            "iwr": "#00ccff",
-            "certutil": "#00ccff",
-            "LINK": "#F44444",
-            "FUNCTION": "#F44444",
-            "WEBHOOK": "#F44444",
-            "powershell": "#8A46A6",
-            "-NoP": "#ff80ff",
-            "-W": "#ff80ff",
-            "H": "#ff80ff",
-            "-Ep": "#ff80ff",
-            "Bypass": "#ff80ff",
-            "-NoProfile": "#ff80ff",
-            "-WindowStyle": "#ff80ff",
-            "Hidden": "#ff80ff",
-            "-w": "#ff80ff",
-            "h": "#ff80ff",
-            "-ExecutionPolicy": "#ff80ff",
+            **{key: "orange" for key in orange_keys},
+            **{key: "#00ccff" for key in cyan_keys},
+            **{key: "#F44444" for key in red_keys},
+            **{key: "#8A46A6" for key in purple_keys},
+            **{key: "#ff80ff" for key in outofnameslol},
             "REM": "gray",
             "default": "white"
         }
@@ -446,7 +456,6 @@ class CodeEditor(QMainWindow):
 
             cursor.movePosition(QTextCursor.NextBlock)
 
-
         cursor.setPosition(current_position)
         self.text_edit.setTextCursor(cursor)
         self.text_edit.textChanged.connect(self.colorizeText)
@@ -467,21 +476,35 @@ class CodeEditor(QMainWindow):
         self.text_edit.clear()
         cursor, format = self.text_edit.textCursor(), QTextCharFormat()
         color_mapping = {
-            ("DELAY", "GUI", "STRING", "ENTER", "TAB", ";", "|", "ESC", "ALT", "CTRL", "UPARROW", "SHIFT", "DOWNARROW", "LEFTARROW", "RIGHTARROW", "HOME", "END", "INSERT", "DELETE", "PAGEUP", "PAGEDOWN", "CAPSLOCK", "NUMLOCK", "SCROLLLOCK", "SPACE", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12", "PRINTSCREEN"): "orange",
+            ("DELAY", "GUI", "STRING", "ENTER", "TAB", ";", "|", "ESC", "ALT", "CTRL", "UPARROW", "SHIFT", "DOWNARROW",
+             "LEFTARROW", "RIGHTARROW", "HOME", "END", "INSERT", "DELETE", "PAGEUP", "PAGEDOWN", "CAPSLOCK", "NUMLOCK",
+             "SCROLLLOCK", "SPACE", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+             "PRINTSCREEN", "WINDOWS", "STRINGLN"): "orange",
             ("irm", "iex", "iwr"): "#00ccff",
-            ("LINK", "FUNCTION", "WEBHOOK", "DISCORD"): "#F44444",
-            ("NoP", "W", "H", "Ep", "Bypass", "NoProfile", "WindowStyle", "Hidden", "w", "h",
+            ("LINK", "FUNCTION", "WEBHOOK", "DISCORD", "discord", "Discord", "Webhook", "webhook", "link",
+             "Link"): "#F44444",
+            ("NoP", "nop", "ep", "bypass", "noprofile", "hidden", "windowstyle", "executionpolicy", "W", "H", "Ep", "Bypass", "NoProfile", "WindowStyle", "Hidden", "w", "h",
              "ExecutionPolicy"): "#ff80ff",
+            ("powershell", "Powershell"): "#8A46A6",
+            ("REM"): "gray",
             "default": "white"
         }
+
         for line in text.split('\n'):
+            gray_mode = False
             for word in re.split(r'(\W+)', line):
-                for words, color in color_mapping.items():
-                    if word in words:
-                        format.setForeground(QColor(color))
-                        break
+                if word == "REM":
+                    gray_mode = True
+                    format.setForeground(QColor("gray"))
+                elif gray_mode:
+                    format.setForeground(QColor("gray"))
                 else:
-                    format.setForeground(QColor(color_mapping["default"]))
+                    for words, color in color_mapping.items():
+                        if word in words:
+                            format.setForeground(QColor(color))
+                            break
+                    else:
+                        format.setForeground(QColor(color_mapping["default"]))
                 cursor.setCharFormat(format)
                 cursor.insertText(word)
             cursor.insertText('\n')
