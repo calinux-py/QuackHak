@@ -160,14 +160,18 @@ class CodeEditor(QMainWindow):
         file_menu.addMenu(new_menu)
 
         file_actions = [
-            ("Open", self.openFile),
-            ("Save", self.save),
-            ("Save As", self.saveAs)
+            ("Open", self.openFile, QKeySequence("Ctrl+O")),
+            ("Save", self.save, QKeySequence.Save),
+            ("Save As", self.saveAs, QKeySequence("Ctrl+Shift+S"))
         ]
-        for name, callback in file_actions:
-            file_menu.addAction(QAction(name, self, triggered=callback))
+        for name, callback, shortcut in file_actions:
+            action = QAction(name, self, triggered=callback)
+            if shortcut:
+                action.setShortcut(shortcut)
+            file_menu.addAction(action)
 
-        file_menu.addAction(QAction('Add Template', self, triggered=self.addTemplate))
+        imtired = QAction('Add Template', self, triggered=self.addTemplate, shortcut=QKeySequence("Ctrl+T"))
+        file_menu.addAction(imtired)
 
         run_script_action = QAction('Run Script', self, triggered=self.executeScript, shortcut=QKeySequence("Ctrl+R"))
         run_menu.addAction(run_script_action)
