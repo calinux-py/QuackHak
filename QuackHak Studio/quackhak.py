@@ -306,7 +306,7 @@ class CodeEditor(QMainWindow):
             elif line.startswith("STRINGLN"):
                 content_to_type = line.split("STRINGLN", 1)[1].strip()
                 pyautogui.write(content_to_type)
-                pyautogui.press('enter')  # Simulating pressing the ENTER key after typing
+                pyautogui.press('enter') 
             elif line.startswith("STRING"):
                 content_to_type = line.split("STRING", 1)[1].strip()
                 pyautogui.write(content_to_type)
@@ -421,7 +421,9 @@ class CodeEditor(QMainWindow):
             "default": "white"
         }
 
-        pattern = re.compile(r'-(\w+)')
+        pattern = re.compile(r'(?<!\S)-(\w+)')
+        quote_pattern = re.compile(
+            r"(?<!\S)(['\"])(.*?)(\1)")
 
         while not cursor.atEnd():
             cursor.select(QTextCursor.LineUnderCursor)
@@ -435,6 +437,30 @@ class CodeEditor(QMainWindow):
                     format.setForeground(QColor(color_mapping["REM"]))
                     cursor.setCharFormat(format)
                     cursor.insertText(word)
+                    continue
+
+                quote_match = quote_pattern.search(word)
+                if quote_match:
+                    format.setForeground(QColor("#90EE90"))
+                    cursor.setCharFormat(format)
+                    start_pos, end_pos = quote_match.span()
+                    cursor.insertText(word[:start_pos])
+                    cursor.setCharFormat(format)
+                    cursor.insertText(word[start_pos:end_pos])
+                    cursor.setCharFormat(QTextCharFormat())
+                    cursor.insertText(word[end_pos:])
+                    continue
+
+                match = pattern.search(word)
+                if match:
+                    format.setForeground(QColor("#ff80ff"))
+                    cursor.setCharFormat(format)
+                    start_pos, end_pos = match.span()
+                    cursor.insertText(word[:start_pos])
+                    cursor.setCharFormat(format)
+                    cursor.insertText(word[start_pos:end_pos])
+                    cursor.setCharFormat(QTextCharFormat())
+                    cursor.insertText(word[end_pos:])
                     continue
 
                 match = pattern.search(word)
@@ -461,7 +487,8 @@ class CodeEditor(QMainWindow):
         self.text_edit.textChanged.connect(self.colorizeText)
 
     def remove_https_prefix(self, text):
-        return text.replace("https://", "")
+        pattern = re.compile(r'https?://(?!discord\.com)')
+        return pattern.sub('', text)
 
     def openFile(self):
         options = QFileDialog.ReadOnly
