@@ -169,8 +169,12 @@ class CodeEditor(QMainWindow):
 
         file_menu.addAction(QAction('Add Template', self, triggered=self.addTemplate))
 
-        run_menu.addAction(QAction('Run Script', self, triggered=self.executeScript))
-        run_menu.addAction(QAction('Run AutoRun', self, triggered=self.runScript))
+        run_script_action = QAction('Run Script', self, triggered=self.executeScript, shortcut=QKeySequence("Ctrl+R"))
+        run_menu.addAction(run_script_action)
+
+        run_meme = QAction('Run AutoRun', self, triggered=self.runScript, shortcut=QKeySequence("Ctrl+E"))
+        run_menu.addAction(run_meme)
+
         self.new_menu = new_menu
         self.refreshTemplates()
 
@@ -306,7 +310,7 @@ class CodeEditor(QMainWindow):
             elif line.startswith("STRINGLN"):
                 content_to_type = line.split("STRINGLN", 1)[1].strip()
                 pyautogui.write(content_to_type)
-                pyautogui.press('enter') 
+                pyautogui.press('enter')
             elif line.startswith("STRING"):
                 content_to_type = line.split("STRING", 1)[1].strip()
                 pyautogui.write(content_to_type)
