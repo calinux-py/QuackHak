@@ -141,6 +141,9 @@ class CodeEditor(QMainWindow):
         edit_menu.addAction(QAction('Undo', self, triggered=self.undoAction, shortcut=QKeySequence.Undo))
         edit_menu.addAction(QAction('Redo', self, triggered=self.redoAction, shortcut=QKeySequence.Redo))
 
+        open_commands_link = QAction('Commands', self, triggered=self.openCommandsLink)
+        tools_menu.addAction(open_commands_link)
+
         tools_actions = [
             ("URL Shortener", self.openURLShortener),
             ("Github", self.openGithub)
@@ -181,6 +184,10 @@ class CodeEditor(QMainWindow):
 
         self.new_menu = new_menu
         self.refreshTemplates()
+
+    def openCommandsLink(self):
+        webbrowser.open(
+            "https://docs.google.com/document/d/1acCETb_qIlxa29bvwMn9cBaA-EICsSj3j6LAfL2JRd8/edit?usp=sharing")
 
     def updateStatusBar(self, message):
         self.status_bar.showMessage(message)
