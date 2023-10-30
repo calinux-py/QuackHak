@@ -23,17 +23,19 @@ QMenuBar::item:selected, QMenu::item:selected {
 QTextEdit, QScrollBar {
     background-color: #222;
     color: white;
-    border-bottom: 2.1px solid #F9F9F9;  
+    border-bottom: 2.1px solid #CDCDCC;
 }
+/* Horizontal ScrollBar */
 QScrollBar:horizontal {
     border: none;
     background: #222;
-    height: 10px;
+    height: 15px;
     margin: 0px 0px 0px 0px;
 }
 QScrollBar::handle:horizontal {
     background: #555;
     min-width: 20px;
+    border-bottom: 0.5px solid #CDCDCC;
 }
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     border: none;
@@ -45,8 +47,35 @@ QScrollBar::left-arrow:horizontal, QScrollBar::right-arrow:horizontal {
 }
 QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
     background: none;
+    border-bottom: 1px solid #CDCDCC;
+}
+
+/* Vertical ScrollBar */
+QScrollBar:vertical {
+    border: none;
+    background: #222;
+    width: 15px;
+    margin: 0px 0px 0px 0px;
+}
+QScrollBar::handle:vertical {
+    background: #555;
+    min-height: 20px;
+    border-right: 0.5px solid #CDCDCC;
+}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    border: none;
+    background: none;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+    border: none;
+    background: none;
+}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+    border-right: 1px solid #CDCDCC;
 }
 """
+
 
 
 def get_icon():
