@@ -327,7 +327,7 @@ class CodeEditor(QMainWindow):
             error_dialog.exec_()
             return
 
-        key_map = { #doesnt include all ducky commands yet
+        key_map = { #doesnt include all ducky commands yet. theres a way easier way to do this. but that means i have to restart lol.
             "GUI r": ("hotkey", ('win', 'r')),
             "GUI R": ("hotkey", ('win', 'r')),
             "GUI d": ("hotkey", ('win', 'd')),
