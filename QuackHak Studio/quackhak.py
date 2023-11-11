@@ -11,6 +11,7 @@ from PyQt5.QtGui import QFont, QTextCharFormat, QColor, QTextCursor, QIcon, QPix
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QMenu, QFileDialog, QAction, QMessageBox, QStatusBar
 
 # QuackHak by CaliNux
+# thank you to Wesley for the bug reports!
 
 dark_stylesheet = """
 QMainWindow, QMenuBar, QMenuBar::item, QMenu, QMenu::item {
@@ -317,7 +318,14 @@ class CodeEditor(QMainWindow):
 
         pyautogui.press('delete')
 
+    def disableUserInteraction(self):
+        self.text_edit.setReadOnly(True)
+
+    def enableUserInteraction(self):
+        self.text_edit.setReadOnly(False)
+
     def executeScript(self):
+        self.disableUserInteraction()
         script_content = self.text_edit.toPlainText()
 
         if not script_content.strip():
@@ -423,7 +431,12 @@ class CodeEditor(QMainWindow):
             elif line in ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"]:
                 pyautogui.press(line.lower())
 
+        time.sleep(1)
+
+        self.enableUserInteraction()
+
     def runScript(self):
+        self.disableUserInteraction()
         script_content = self.text_edit.toPlainText()
         start_index = script_content.find('powershell')
         end_index = script_content.find('ENTER')
@@ -445,6 +458,12 @@ class CodeEditor(QMainWindow):
             pyautogui.hotkey('ctrl', 'v')
             time.sleep(1)
             pyautogui.press('enter')
+
+        time.sleep(1)
+
+        self.enableUserInteraction()
+
+
 
     def uppercaseKeywords(self, text):
         always_upper = ['alt', 'ctrl', 'shift', 'delete', 'f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7', 'f8', 'f9', 'f10',
@@ -674,7 +693,7 @@ def main():
     window = CodeEditor()
     window.setWindowTitle('QuackHak Studio')
 
-    window.setGeometry(100, 100, 2100, 500)
+    window.setGeometry(100, 100, 500, 500)
     window.show()
     sys.exit(app.exec_())
 
