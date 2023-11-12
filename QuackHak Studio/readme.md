@@ -84,6 +84,6 @@ QuackHak Studio is developed by [CaliNux](https://github.com/calinux-py).
 
 ## Acknowledgments
 
-- Special thanks to I_am_Jakoby & Redd <3
+- Special thanks to I_am_Jakoby, Redd, and Wesley5n1p35
 
 Feel free to contribute to this project and help improve QuackHak Studio for Rubber Ducky enthusiasts. 
